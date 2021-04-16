@@ -1,0 +1,92 @@
+//0 - none
+//g - grass
+//# - wood wall, 
+//@ - log, 
+//d - door 
+//w - window, 
+//u - up oriented roof, 
+//l - left oriented roof
+//d - down oriented roof, 
+//r - right oriented roof
+//
+//
+// fully transparent layer
+N
+000
+000
+000
+// ground layer
+G
+ggg
+ggg
+ggg
+// floor layer
+F
+###
+###
+###
+// corner floor layer
+CF
+@@@
+@##
+@##
+// side floor layer
+SF
+@@@
+###
+###
+// side wall
+#
+###
+000
+000
+// wall with door
+D
+#d#
+000
+000
+// corner wall
+C#
+@##
+#00
+#00
+// window
+W
+www
+000
+000
+// roof low
+RL
+ttt
+000
+000
+// roof middle
+RM
+000
+ttt
+000
+// roof high
+RH
+000
+000
+ttt
+// corner roof low 
+CRL
+@tt
+l00
+l00
+// corner roof middle 
+CRM
+000
+0@t
+0l0
+// roof semicentral 
+RSC
+ttt
+###
+bbb 
+// roof central
+RC
+@t@
+l@r
+@b@

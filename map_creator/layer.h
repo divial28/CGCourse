@@ -1,39 +1,15 @@
 #pragma once
 
-#include <vector>
 #include <SFML/Graphics.hpp>
-#include <iostream>
+#include <string>
+#include <map>
 
-#include "tile.h"
 
 class Layer
 {
 public:
-    Layer();
+    char blocks[3][3];
 
-    Layer(int x, int y, int w, int h, int size, int spacer);
-
-    void draw(sf::RenderWindow * window);
-
-    void handleMouseEvent(sf::Event * ev);
-
-    bool isBound(int x, int y);
-
-    void setCurrentColor(sf::Color& color);
-
-private:
-    int x;  //координаты на экране
-    int y;
-    int w;  //размер сетки в тайлах
-    int h;
-    int ts; //tile size
-    int s;  //spacer
-
-    int focus;
-
-    sf::Color   currentColor;
-
-    sf::RectangleShape focusShape;
-
-    std::vector<sf::RectangleShape> vTiles;
+    Layer(std::string blocksID);
+    void rotate();
 };

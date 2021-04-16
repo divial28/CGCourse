@@ -1,0 +1,20 @@
+0 - none
+255 255 255 255
+g - grass
+34 168 3 255
+# - wood wall,
+232 225 86 255
+@ - log, 
+125 64 42 255
+d - door 
+255 119 0 255
+w - window, 
+77 249 255 255
+t - up oriented roof, 
+209 202 9 255
+l - left oriented roof
+209 202 9 255
+b - down oriented roof, 
+209 202 9 255
+r - right oriented roof
+209 202 9 255

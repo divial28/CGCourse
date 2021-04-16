@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project(glTriangle)
+project(mapEditor)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -13,4 +13,4 @@ file(GLOB SOURCES *.h *.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(glTriangle sfml-graphics sfml-audio SOIL ${OPENGL_LIBRARY} ${GLEW_LIBRARY})
+target_link_libraries(mapEditor sfml-graphics sfml-audio SOIL ${OPENGL_LIBRARY} ${GLEW_LIBRARY})
