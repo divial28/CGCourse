@@ -5,7 +5,11 @@
 #include "net.h"
 #include "tile.h"
 #include "generator.h"
-#include "bar.h"
+
+//TODO: add layers rotation
+//TODO: add Tiles support
+//TODO: add tile rules
+//TODO: implement WFC
 
 int main()
 {
@@ -18,8 +22,6 @@ int main()
     int h = 45;
 
     Generator generator;
-
-    Bar bar(1700, 50, 50);
 
     std::vector<Net*> vLayers;
     std::vector<Tile> vTiles;
@@ -70,8 +72,6 @@ int main()
             vLayers[i]->draw(&window, parent);
             parent = vLayers[i];
         }
-        
-        bar.draw(&window);
 
         //swap buffers
         window.display();
