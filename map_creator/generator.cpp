@@ -1,15 +1,21 @@
 #include "generator.h"
 
-std::map<std::string, Layer*>   Generator::layers;
-std::map<char, sf::Color>       Generator::colors;
-
-Generator::Generator()
+Generator::Generator(int w, int h, int minSide)
+    :w(w), h(h), minSide(minSide)
 {
+    log.open("log");
+    log2.open("log2");
+    srand(time(0));
     parseColors();
-    parseLayers();
-    parseTiles();
-
+    generateMap();
 }
+
+Generator::~Generator()
+{
+    log.close();
+    log2.close();
+}
+
 void Generator::parseColors()
 {
     std::ifstream in("../colors");
@@ -23,52 +29,73 @@ void Generator::parseColors()
     {
         sf::Color color;
         char id = s.at(0);
-        //std::cout << id << ": ";
 
         std::getline(in, s);
         std::stringstream ss(s);
         ss >> s; color.r = std::stoi(s);
-        //std::cout  << std::stoi(s) << ",";
         ss >> s; color.g = std::stoi(s);
-        //std::cout  << s << ",";
         ss >> s; color.b = std::stoi(s);
-        //std::cout  << s << ",";
         ss >> s; color.a = std::stoi(s);
-        //std::cout  << s << std::endl;
 
-        
         colors[id] = color;
     }
 }
 
-void Generator::parseLayers()
+void Generator::generateMap()
 {
-    std::ifstream in("../layers");
-    if(!in)
+    for(int i = 0; i < h; i++)
+        for(int j = 0; j < w; j++)
+            scene[stringID(i, j, 0)] = 'g';
+    
+    doBSP({0, 0, w, h}, true);
+}
+
+void Generator::doBSP(Rect rect, bool horizontal)
+{
+    //horizontal = rand() % 2;
+    if(horizontal && rect.w > 4*minSide)
     {
-        std::cout << "cant open layers file" << std::endl;
-        return;
+        int division = minSide + (rand() % (rect.w - 2*minSide));
+        doBSP({rect.x, rect.z, division, rect.h}, !horizontal);
+        doBSP({rect.x + division, rect.z, rect.w - division, rect.h}, !horizontal);
     }
-
-    std::string s;
-    while(std::getline(in, s))
+    else if(!horizontal && rect.h > 4*minSide)
     {
-        if(s.front() == '/')
-            continue;
+        int division = minSide + (rand() % (rect.h - 2*minSide));
+        doBSP({rect.x, rect.z, rect.w, division}, !horizontal);
+        doBSP({rect.x, rect.z + division, rect.w, rect.h - division}, !horizontal);
+    }
+    else
+        placeRoads(rect);
+}
 
-        std::string id = s;
-        std::string blocks;
-        for(int i = 0; i < 3; i++)
-        {
-            std::getline(in, s);
-            blocks += s;
-        }
-        //std::cout << id << ": " << blocks << std::endl;
-        layers[id] = new Layer(blocks);
+void Generator::placeRoads(Rect rect)
+{
+    for(int i = rect.x; i < rect.x + rect.w; i++)
+    {
+        scene[stringID(i, rect.z, 0)] = '#';
+        scene[stringID(i, rect.z+rect.h-1, 0)] = '#';
+    }
+    for(int i = rect.z; i < rect.z + rect.h; i++)
+    {
+        scene[stringID(rect.x, i, 0)] = '#';
+        scene[stringID(rect.x+rect.w-1, i, 0)] = '#';
     }
 }
 
-void Generator::parseTiles()
+const sf::Color& Generator::getBlock(int i, int j, int k)
 {
+    auto block = scene.find(stringID(i, j, k));
+    
+    if(block != scene.end())
+    {
+        return colors.at(block->second);
+    }
+    else
+        return colors.at('0');
+}
 
+const std::string Generator::stringID(int i, int j, int k)
+{
+    return (std::to_string(j) + "," + std::to_string(k) + "," + std::to_string(i));
 }

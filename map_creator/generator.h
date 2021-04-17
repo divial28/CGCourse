@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -7,21 +9,45 @@
 #include <sstream>
 
 #include "net.h"
-#include "layer.h"
-#include "tile.h"
 
 class Generator
 {
-private:
-    void parseColors();
-    void parseLayers();
-    void parseTiles();
+    struct Rect
+    {
+        int x;
+        int z;
+        int w;
+        int h;
+    };
 
 public:
-    
-    static std::map<std::string, Layer*> layers;
-    static std::map<char, sf::Color> colors;
-    
-    Generator();
+    Generator(int w, int h, int minSide);
+    ~Generator();
 
+    const sf::Color& getBlock(int i, int j, int k);
+
+private:
+    void parseColors();
+
+    void generateMap();
+
+    void doBSP(Rect rect, bool horizontal);
+
+    void placeRoads(Rect rect)
+;
+    const std::string stringID(int i, int j, int k);
+
+private:
+
+    int w;  //ширина генерируемого поля
+    int h;  //длина генерируемого поля
+    int minSide;    //минимальная сторона прямоугольника
+
+    std::map<std::string, char> scene;  //итоговая генерируемая сцена
+    std::map<char, sf::Color> colors;   //карта цветов
+
+    
+
+    std::ofstream log;
+    std::ofstream log2;
 };
