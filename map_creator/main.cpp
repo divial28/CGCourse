@@ -12,22 +12,22 @@
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(1800, 1000), "Map Creator", sf::Style::Default);
+    sf::RenderWindow window(sf::VideoMode(1900, 1000), "Map Creator", sf::Style::Default);
 
     int s = 10;     //spacer
     int ls = 1;     //layer spacer
     int ts = 3;    //tile size
-    int w = 200;
-    int h = 200;
+    int w = 90;
+    int h = 60;
     int minSide = 10;
 
     Generator generator(w, h, minSide);
 
     std::vector<Net*> nets;
 
-    for(int i = 0; i < 1; i++)
+    for(int i = 0; i < 6; i++)
     {
-        for(int j = 0; j < 1; j++)
+        for(int j = 0; j < 5; j++)
         {
             nets.push_back(new Net(s*(j+1) + w*ts*j + w*ls*j, s*(i+1) + h*ts*i + h*ls*i, w, h, ts, ls));
         }
@@ -38,7 +38,7 @@ int main()
     {
         for(int i = 0; i < h; i++)
             for(int j = 0; j < w; j++)
-                nets[k]->setBlock(i, j, generator.getBlock(i, j, k));
+                nets[k]->setBlock(i, j, generator.getBlock(j, k, i));
     }
 
     while (window.isOpen())

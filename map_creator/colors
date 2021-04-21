@@ -1,5 +1,7 @@
 0 - none
-255 255 255 255
+255 255 255 0
+c - cobblestone
+90 90 90 255
 g - grass
 34 168 3 255
 # - wood wall,
