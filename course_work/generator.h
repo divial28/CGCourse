@@ -8,8 +8,16 @@
 #include <string>
 #include <sstream>
 #include <SFML/Graphics.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-typedef std::map<std::string, char> Scene;
+struct Block
+{
+    char id;
+    glm::mat4 model;
+};
+
+typedef std::map<std::string, Block> Scene;
 
 class Generator
 {
@@ -57,6 +65,8 @@ private:
     void setupDoor(Rect rect, bool* sides);
 
     void setupWindows(Rect rect, int stage);
+
+    void setBlock(char id, int x, int y, int z, float rotation = 0);    //rotation is in degrees
 
     const std::string stringID(int i, int j, int k) const;
 

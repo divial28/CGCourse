@@ -19,7 +19,7 @@ void Generator::generateMap()
 {
     for(int i = 0; i < h; i++)
         for(int j = 0; j < w; j++)
-            scene[stringID(j, 0, i)] = 'g';
+            setBlock('g', j, 0, i);
     
     doBSP({0, 0, w, h}, true);
 }
@@ -59,7 +59,7 @@ void Generator::fillFloor(Rect rect, int yLayer, char fillBlock, char borderBloc
 {
     for(int i = rect.z; i < rect.z + rect.h; i++)
         for(int j = rect.x; j < rect.x + rect.w; j++)
-            scene[stringID(j, yLayer, i)] = fillBlock;
+            setBlock(fillBlock, j, yLayer, i);
     
     fillPerimeter(rect, yLayer, borderBlock);
 }
@@ -68,35 +68,35 @@ void Generator::fillPerimeter(Rect rect, int yLayer, char blockID)
 {
     for(int i = rect.x; i < rect.x + rect.w; i++)
     {
-        scene[stringID(i, yLayer, rect.z)] = blockID;
-        scene[stringID(i, yLayer, rect.z+rect.h-1)] = blockID;
+        setBlock(blockID, i, yLayer, rect.z);
+        setBlock(blockID, i, yLayer, rect.z+rect.h-1);
     }
     for(int i = rect.z; i < rect.z + rect.h; i++)
     {
-        scene[stringID(rect.x, yLayer, i)] = blockID;
-        scene[stringID(rect.x+rect.w-1, yLayer, i)] = blockID;
+        setBlock(blockID, rect.x, yLayer, i);
+        setBlock(blockID, rect.x+rect.w-1, yLayer, i);
     }
 }
 
 void Generator::fillCorners(Rect rect, int yLayer, char blockID)
 {
-    scene[stringID(rect.x, yLayer, rect.z)] = blockID;
-    scene[stringID(rect.x + rect.w-1, yLayer, rect.z)] = blockID;
-    scene[stringID(rect.x, yLayer, rect.z + rect.h-1)] = blockID;
-    scene[stringID(rect.x + rect.w-1, yLayer, rect.z + rect.h-1)] = blockID;
+    setBlock(blockID, rect.x, yLayer, rect.z);
+    setBlock(blockID, rect.x + rect.w-1, yLayer, rect.z);
+    setBlock(blockID, rect.x, yLayer, rect.z + rect.h-1);
+    setBlock(blockID, rect.x + rect.w-1, yLayer, rect.z + rect.h-1);
 }
 
 void Generator::copyPerimeter(Rect rect, int src, int dest)
 {
     for(int i = rect.x; i < rect.x + rect.w; i++)
     {
-        scene[stringID(i, dest, rect.z)] = scene.at(stringID(i, src, rect.z));
-        scene[stringID(i, dest, rect.z+rect.h-1)] = scene.at(stringID(i, src, rect.z+rect.h-1));
+        setBlock(getBlock(i, src, rect.z), i, dest, rect.z);
+        setBlock(getBlock(i, src, rect.z+rect.h-1), i, dest, rect.z+rect.h-1);
     }
     for(int i = rect.z; i < rect.z + rect.h; i++)
     {
-        scene[stringID(rect.x, dest, i)] = scene.at(stringID(rect.x, src, i));
-        scene[stringID(rect.x+rect.w-1, dest, i)] = scene.at(stringID(rect.x+rect.w-1, src, i));
+        setBlock(getBlock(rect.x, src, i), rect.x, dest, i);
+        setBlock(getBlock(rect.x+rect.w-1, src, i), rect.x+rect.w-1, dest, i);
     }
 }
 
@@ -142,9 +142,12 @@ void Generator::setupDoor(Rect rect, bool* sides)
     bool doorChosen = false;
     int doorX;
     int doorZ;
+    float rotation = 0;
+    int side;
+
     while(!doorChosen)
     {
-        int side = rand()%4;
+        side = rand()%4;
         if(sides[side])
         {
             if(side == TOP || side == BOTTOM)
@@ -154,23 +157,23 @@ void Generator::setupDoor(Rect rect, bool* sides)
                 
                 //check windows
                 int winSize = 0;
-                while(scene[stringID(doorX-1-winSize++, 2, doorZ)] == 'w');
+                while(getBlock(doorX-1-winSize++, 2, doorZ) == 'w');
                 if(winSize > 3)
-                    scene[stringID(doorX-1, 2, doorZ)] = '#';
+                    setBlock('#', doorX-1, 2, doorZ);
                 else
-                    for(int i = 0; i < winSize; scene[stringID(doorX-1-i++, 2, doorZ)] = '#');
+                    for(int i = 0; i < winSize; setBlock('#', doorX-1-i++, 2, doorZ));
                 winSize = 0;
-                while(scene[stringID(doorX+1+winSize++, 2, doorZ)] == 'w');
+                while(getBlock(doorX+1+winSize++, 2, doorZ) == 'w');
                 if(winSize > 3)
-                    scene[stringID(doorX+1, 2, doorZ)] = '#';
+                    setBlock('#', doorX+1, 2, doorZ);
                 else
-                    for(int i = 0; i < winSize; scene[stringID(doorX+1+i++, 2, doorZ)] = '#');
+                    for(int i = 0; i < winSize; setBlock('#', doorX+1+i++, 2, doorZ));
 
                 int dir = (side == TOP) ? -1 : 1;
                 int z = doorZ + dir;
-                while(scene[stringID(doorX, 0, z)] != 'c')
+                while(getBlock(doorX, 0, z) != 'c')
                 {
-                    scene[stringID(doorX, 0, z)] = 'c';
+                    setBlock('c', doorX, 0, z);
                     z += dir;
                 }
             }
@@ -181,23 +184,23 @@ void Generator::setupDoor(Rect rect, bool* sides)
 
                 //check windows
                 int winSize = 0;
-                while(scene[stringID(doorX, 2, doorZ-1-winSize++)] == 'w');
+                while(getBlock(doorX, 2, doorZ-1-winSize++) == 'w');
                 if(winSize > 3)
-                    scene[stringID(doorX, 2, doorZ-1)] = '#';
+                    setBlock('w', doorX, 2, doorZ-1);
                 else
-                    for(int i = 0; i < winSize; scene[stringID(doorX, 2, doorZ-1-i++)] = '#');
+                    for(int i = 0; i < winSize; setBlock('#', doorX, 2, doorZ-1-i++));
                 winSize = 0;
-                while(scene[stringID(doorX, 2, doorZ+1+winSize++)] == 'w');
+                while(getBlock(doorX, 2, doorZ+1+winSize++) == 'w');
                 if(winSize > 3)
-                    scene[stringID(doorX, 2, doorZ+1)] = '#';
+                    setBlock('#', doorX, 2, doorZ+1);
                 else
-                    for(int i = 0; i < winSize; scene[stringID(doorX, 2, doorZ+1+i++)] = '#');
+                    for(int i = 0; i < winSize; setBlock('#', doorX, 2, doorZ+1+i++));
 
                 int dir = (side == LEFT) ? -1 : 1;
                 int x = doorX + dir;
-                while(scene[stringID(x, 0, doorZ)] != 'c')
+                while(getBlock(x, 0, doorZ) != 'c')
                 {
-                    scene[stringID(x, 0, doorZ)] = 'c';
+                    setBlock('c', x, 0, doorZ);
                     x += dir;
                 }
             }
@@ -205,9 +208,20 @@ void Generator::setupDoor(Rect rect, bool* sides)
         }
     }
     copyPerimeter(rect, 2, 3);
-    scene[stringID(doorX, 1, doorZ)] = 'd';
-    scene[stringID(doorX, 2, doorZ)] = '0';
-    scene[stringID(doorX, 3, doorZ)] = '#';
+    
+    rotation = -90 + 90*side;
+    glm::mat4 model(1.0f);
+    if(side & 1)
+        model = glm::translate(model, glm::vec3(doorX, 1, (side == 1) ? doorZ-0.5 : doorZ+0.5));
+    else
+        model = glm::translate(model, glm::vec3(side ? doorX+0.32 : doorX-0.32, 1, doorZ));
+    model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0, 1.0, 0.0));
+    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+    
+    scene[stringID(doorX, 1, doorZ)] = {'d', model};
+
+    setBlock('0', doorX, 2, doorZ);
+    setBlock('#', doorX, 3, doorZ);
 }
 
 void Generator::setupWindows(Rect rect, int layer)
@@ -233,10 +247,10 @@ void Generator::setupWindows(Rect rect, int layer)
             if(abs(front - back) < 2 && i >= 3  || back < front)
                 break;
 
-            scene[stringID(front, layer, rect.z)] = 'w';
-            scene[stringID(back, layer, rect.z)] = 'w';
-            scene[stringID(front, layer, rect.z+rect.h-1)] = 'w';
-            scene[stringID(back, layer, rect.z+rect.h-1)] = 'w';
+            setBlock('w', front, layer, rect.z);
+            setBlock('w', back, layer, rect.z);
+            setBlock('w', front, layer, rect.z+rect.h-1);
+            setBlock('w', back, layer, rect.z+rect.h-1);
             front++;
             back--;
         }
@@ -266,10 +280,10 @@ void Generator::setupWindows(Rect rect, int layer)
             if(abs(front - back) < 2 && i >= 3  || back < front)
                 break;
 
-            scene[stringID(rect.x, layer, front)] = 'w';
-            scene[stringID(rect.x, layer, back)] = 'w';
-            scene[stringID(rect.x + rect.w-1, layer, front)] = 'w';
-            scene[stringID(rect.x + rect.w-1, layer, back)] = 'w';
+            setBlock('w', rect.x, layer, front);
+            setBlock('w', rect.x, layer, back);
+            setBlock('w', rect.x + rect.w-1, layer, front);
+            setBlock('w', rect.x + rect.w-1, layer, back);
             front++;
             back--;
         }
@@ -279,12 +293,23 @@ void Generator::setupWindows(Rect rect, int layer)
     }
 }
 
+void Generator::setBlock(char id, int x, int y, int z, float rotation)
+{   
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(x, y, z));
+    if(rotation)
+        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0, 1.0, 0.0));
+    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+    
+    scene[stringID(x, y, z)] = {id, model};
+}
+
 const char Generator::getBlock(int x, int y, int z) const
 {
     auto block = scene.find(stringID(x, y, z));
     
     if(block != scene.end())
-        return block->second;
+        return block->second.id;
     else
         return '0';
 }
