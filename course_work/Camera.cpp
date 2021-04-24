@@ -14,7 +14,7 @@ Camera::Camera(sf::Window* window, glm::vec3 position, Mode mode)
     , FOV(glm::radians(45.0f))
     , speed(0.2f)
     , mode(mode)
-    , cursorCapchure(true)
+    , cursorCapchure(false)
 {
     changeCursorCapchure();
 }

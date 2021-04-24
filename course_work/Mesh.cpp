@@ -35,10 +35,23 @@ void Mesh::setupMesh()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 
     glBindVertexArray(0);
-}  
+} 
+//TODO: delete later 
+/*
+VAO
+VBO1
+|fff|fff|ff||fff|fff|ff| 
+ |----|--|---^   ^   ^
+      |--|-------|   |
+         |-----------|
+VBO2
+|ffff|ffff|ffff|ffff||ffff|ffff|ffff|ffff|
+ |--------------------^
+*/
 
 void Mesh::Draw(Shader& shader) 
 {
+    glBindVertexArray(VAO);
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
     for(unsigned int i = 0; i < textures.size(); i++)
@@ -61,7 +74,8 @@ void Mesh::Draw(Shader& shader)
     glActiveTexture(GL_TEXTURE0);
 
     // отрисовывем полигональную сетку
-    glBindVertexArray(VAO);
+    
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+
+    glBindVertexArray(VAO);
 }  

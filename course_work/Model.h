@@ -6,6 +6,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <SOIL/SOIL.h>
+#include <GL/glew.h>
 
 #include "Mesh.h"
 #include "Shader.h"
@@ -17,6 +18,9 @@ class Model
         /*  Методы   */
         Model(const char * path);
         void Draw(Shader& shader);	
+        GLuint getVAO() { return meshes[0].getVAO(); }
+        GLuint getTexture() { return textures[0].id; }
+        std::size_t getIndicesCount() { return meshes[0].indices.size(); }
 
     private:
         /*  Данные модели  */

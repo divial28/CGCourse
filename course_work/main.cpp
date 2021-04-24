@@ -16,12 +16,12 @@
 #include "Camera.h"
 #include "Model.h"
 #include "generator.h"
+#include "scene.h"
 
 //TODO: render glasses separately
 //TODO: render optimization
     //TODO: face culling must help
     //TODO: maybe keep houses objects and check for not visible blocks
-//TODO: fix doors coordinates and rotation
 
 int main()
 {
@@ -47,25 +47,14 @@ int main()
 
     bool keys[sf::Keyboard::KeyCount] = {false};
 
-    Camera cam(&window, glm::vec3(0, 5, 0));
+    Camera cam(&window, glm::vec3(0, 5, 0), Camera::FPS);
     cam.setKeys(keys);
 
     Shader shader(&cam, "../combined_light.vert", "../glass.frag");
     Shader lampShader(&cam, "../lamp.vert", "../lamp.frag");
 
-    std::map<char, Model*> models;
-    models['c'] = new Model("../models/cobbleblock/cobbleblock.obj");
-    models['d'] = new Model("../models/newdoor/doorblock.obj");
-    models['@'] = new Model("../models/logblock/logblock.obj");
-    models['r'] = new Model("../models/stairsblock/stairsblock.obj");
-    models['g'] = new Model("../models/grassblock/grassblock.obj");
-    models['#'] = new Model("../models/plankblock/plankblock.obj");
-    models['!'] = new Model("../models/torchblock/torch.obj");
-    models['w'] = new Model("../models/glassblock/glassblock.obj");
     //TODO: add fence
-
-    Generator generator(100, 100, 10);
-    Scene scene = generator.getScene();
+    Scene scene("../model_list");
 
     sf::Clock clock;
     sf::Clock fpsClock;
@@ -109,13 +98,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.Use();
-
-        for(auto block : scene)
-        {
-            shader.uniform("model", block.second.model);
-            if(block.second.id != '0')
-                models.at(block.second.id)->Draw(shader);
-        }
+        scene.draw(shader);
 
         //swap buffers
         window.display();

@@ -14,6 +14,8 @@ Model::Model(const char * file_path)
     directory = path.substr(0, path.find_last_of('/'));
 
     processNode(scene->mRootNode, scene);
+
+    std::cout << meshes.size() << std::endl;
 }
 
 void Model::Draw(Shader& shader)

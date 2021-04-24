@@ -17,7 +17,7 @@ struct Block
     glm::mat4 model;
 };
 
-typedef std::map<std::string, Block> Scene;
+typedef std::map<std::string, Block> RawScene;
 
 class Generator
 {
@@ -43,7 +43,7 @@ public:
 
     const char getBlock(int i, int j, int k) const;
 
-    Scene& getScene() { return scene; }
+    RawScene& getScene() { return scene; }
 
     static void getCoords(const std::string& key, int* x, int* y, int* z);
 
@@ -76,7 +76,7 @@ private:
     int h;  //длина генерируемого поля
     int minSide;    //минимальная сторона прямоугольника
 
-    Scene scene;  //итоговая генерируемая сцена
+    RawScene scene;  //итоговая генерируемая сцена
     std::map<std::string, Rect> houses;
 
 
