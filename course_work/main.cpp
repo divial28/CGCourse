@@ -18,10 +18,7 @@
 #include "generator.h"
 #include "scene.h"
 
-//TODO: render glasses separately
-//TODO: render optimization
-    //TODO: face culling must help
-    //TODO: maybe keep houses objects and check for not visible blocks
+//TODO: lighting
 
 int main()
 {
