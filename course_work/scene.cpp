@@ -25,6 +25,14 @@ Scene::Scene(const char * path)
 
     for(auto manager : modelManagers)
     {
+        if(manager.first == 'w')
+        {
+            glEnable(GL_CULL_FACE);
+        }
+        else
+        {
+            glDisable(GL_CULL_FACE);
+        }
         manager.second->setupBuffer();
     }
 

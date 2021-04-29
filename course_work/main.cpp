@@ -40,13 +40,16 @@ int main()
      //тест глубины для нормального отображения полигонов
     glEnable(GL_DEPTH_TEST);
 
+    glClearColor(0.6f, 0.7f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    window.display();
+
     bool keys[sf::Keyboard::KeyCount] = {false};
 
     Camera cam(&window, glm::vec3(0, 5, 0), Camera::FPS);
     cam.setKeys(keys);
 
-    Shader shader(&cam, "../combined_light.vert", "../glass.frag");
-    Shader lampShader(&cam, "../lamp.vert", "../lamp.frag");
+    Shader shader(&cam, "../shader.vert", "../shader.frag");
 
     //TODO: add fence
     Scene scene("../model_list");
