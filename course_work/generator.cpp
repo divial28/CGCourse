@@ -1,18 +1,34 @@
 #include "generator.h"
 
-Generator::Generator(int w, int h, int minSide)
-    :w(w), h(h), minSide(minSide)
+Block::Block()
+    : id('0'), model(1.0f), frontLights(0.0f), backLights(0.0f)
 {
-    log.open("log");
-    log2.open("log2");
+
+}
+
+Block::Block(char id, glm::mat4 model)
+    : id(id), model(model), frontLights(0.4f), backLights(0.4f)
+{
+
+} 
+
+Generator::Generator(int w, int h, int minSide)
+    :w(w), h(h), minSide(minSide), log("../log")
+{
     srand(time(0));
     generateMap();
+    
+    for(int i = 0; i < torchPos.size(); i++)
+    {
+        calculateLight(torchPos[i].x, torchPos[i].y, torchPos[i].z, 0, DALL, MNONE);
+    }
+
+    std::cout << scene.size() << std::endl;
 }
 
 Generator::~Generator()
 {
     log.close();
-    log2.close();
 }
 
 void Generator::generateMap()
@@ -154,21 +170,30 @@ void Generator::setupDoor(Rect rect, bool* sides)
             {
                 doorX = rect.x + 2 + rand()%(rect.w-4);
                 doorZ = (side == TOP) ? rect.z : rect.z + rect.h-1;
-                
+
                 //check windows
                 int winSize = 0;
                 while(getBlock(doorX-1-winSize++, 2, doorZ) == 'w');
                 if(winSize > 3)
                     setBlock('#', doorX-1, 2, doorZ);
                 else
+                {
                     for(int i = 0; i < winSize; setBlock('#', doorX-1-i++, 2, doorZ));
+                        setBlock('0', doorX-1-winSize, 2, doorZ+1);
+                        setBlock('0', doorX-1-winSize, 2, doorZ-1);
+                }
                 winSize = 0;
                 while(getBlock(doorX+1+winSize++, 2, doorZ) == 'w');
                 if(winSize > 3)
                     setBlock('#', doorX+1, 2, doorZ);
                 else
+                {
                     for(int i = 0; i < winSize; setBlock('#', doorX+1+i++, 2, doorZ));
+                    setBlock('0', doorX+1+winSize, 2, doorZ+1);
+                    setBlock('0', doorX+1+winSize, 2, doorZ-1);
+                }
 
+                //roads
                 int dir = (side == TOP) ? -1 : 1;
                 int z = doorZ + dir;
                 while(getBlock(doorX, 0, z) != 'c')
@@ -176,6 +201,12 @@ void Generator::setupDoor(Rect rect, bool* sides)
                     setBlock('c', doorX, 0, z);
                     z += dir;
                 }
+
+                //torchs
+                setBlock('0', doorX, 3, doorZ-1);
+                setBlock('0', doorX, 3, doorZ+1);
+                setupTorchs(doorX-1, 2, doorZ, true);
+                setupTorchs(doorX+1, 2, doorZ, true);
             }
             else if(side == LEFT || side == RIGHT)
             {
@@ -186,16 +217,25 @@ void Generator::setupDoor(Rect rect, bool* sides)
                 int winSize = 0;
                 while(getBlock(doorX, 2, doorZ-1-winSize++) == 'w');
                 if(winSize > 3)
-                    setBlock('w', doorX, 2, doorZ-1);
+                    setBlock('#', doorX, 2, doorZ-1);
                 else
+                {
                     for(int i = 0; i < winSize; setBlock('#', doorX, 2, doorZ-1-i++));
+                    setBlock('0', doorX-1, 3, doorZ-1-winSize);
+                    setBlock('0', doorX+1, 3, doorZ-1-winSize);
+                }
                 winSize = 0;
                 while(getBlock(doorX, 2, doorZ+1+winSize++) == 'w');
                 if(winSize > 3)
                     setBlock('#', doorX, 2, doorZ+1);
                 else
+                {
                     for(int i = 0; i < winSize; setBlock('#', doorX, 2, doorZ+1+i++));
+                    setBlock('0', doorX-1, 3, doorZ+1+winSize);
+                    setBlock('0', doorX+1, 3, doorZ+1+winSize);
+                }
 
+                //roads
                 int dir = (side == LEFT) ? -1 : 1;
                 int x = doorX + dir;
                 while(getBlock(x, 0, doorZ) != 'c')
@@ -203,6 +243,12 @@ void Generator::setupDoor(Rect rect, bool* sides)
                     setBlock('c', x, 0, doorZ);
                     x += dir;
                 }
+
+                //torchs
+                setBlock('0', doorX-1, 3, doorZ);
+                setBlock('0', doorX+1, 3, doorZ);
+                setupTorchs(doorX, 2, doorZ-1, false);
+                setupTorchs(doorX, 2, doorZ+1, false);
             }
             doorChosen = true;
         }
@@ -218,7 +264,7 @@ void Generator::setupDoor(Rect rect, bool* sides)
     model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0, 1.0, 0.0));
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
     
-    scene[stringID(doorX, 1, doorZ)] = {'d', model};
+    scene[stringID(doorX, 1, doorZ)] = Block('d', model);
 
     setBlock('0', doorX, 2, doorZ);
     setBlock('#', doorX, 3, doorZ);
@@ -242,6 +288,11 @@ void Generator::setupWindows(Rect rect, int layer)
         if(winSize < 3)
             break;
 
+        setupTorchs(front-1, layer, rect.z, true);
+        setupTorchs(back+1, layer, rect.z, true);
+        setupTorchs(front-1, layer, rect.z+rect.h-1, true);
+        setupTorchs(back+1, layer, rect.z+rect.h-1, true);
+
         for(int i = 0; i < winSize; i++)
         {   
             if(abs(front - back) < 2 && i >= 3  || back < front)
@@ -254,6 +305,12 @@ void Generator::setupWindows(Rect rect, int layer)
             front++;
             back--;
         }
+        setupTorchs(front, layer, rect.z, true);
+        setupTorchs(back, layer, rect.z, true);
+        setupTorchs(front, layer, rect.z+rect.h-1, true);
+        setupTorchs(back, layer, rect.z+rect.h-1, true);
+
+
         int space =  1 + rand()%2;
         front += space;
         back -= space;
@@ -275,6 +332,11 @@ void Generator::setupWindows(Rect rect, int layer)
         if(winSize < 3)
             break;
 
+        setupTorchs(rect.x, layer, front-1, false);
+        setupTorchs(rect.x, layer, back+1, false);
+        setupTorchs(rect.x+rect.w-1, layer, front-1, false);
+        setupTorchs(rect.x+rect.w-1, layer, back+1, false);
+
         for(int i = 0; i < winSize; i++)
         {   
             if(abs(front - back) < 2 && i >= 3  || back < front)
@@ -287,10 +349,88 @@ void Generator::setupWindows(Rect rect, int layer)
             front++;
             back--;
         }
+        setupTorchs(rect.x, layer, front, false);
+        setupTorchs(rect.x, layer, back, false);
+        setupTorchs(rect.x+rect.w-1, layer, front, false);
+        setupTorchs(rect.x+rect.w-1, layer, back, false);
+
         int space =  1 + rand()%3;
         front += space;
         back -= space;
     }
+}
+
+void Generator::setupTorchs(int x, int y, int z, bool horizontal)
+{
+    if(getBlock(x, y, z) == '#')
+    {
+        if(horizontal)
+        {
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, glm::vec3(x, y+1, z-0.55));
+            model = glm::rotate(model, glm::radians(-30.0f), glm::vec3(1.0, 0.0, 0.0));
+            model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+            scene[stringID(x, y+1, z-1)] = Block('!', model);
+            torchPos.push_back({x, y+1, z-1});
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(x, y+1, z+0.55));
+            model = glm::rotate(model, glm::radians(30.0f), glm::vec3(1.0, 0.0, 0.0));
+            model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+            scene[stringID(x, y+1, z+1)] = Block('!', model);
+            torchPos.push_back({x, y+1, z+1});
+        }
+        else
+        {
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, glm::vec3(x-0.55, y+1, z));
+            model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0, 0.0, 1.0));
+            model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+            scene[stringID(x-1, y+1, z)] = Block('!', model);
+            torchPos.push_back({x-1, y+1, z});
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(x+0.55, y+1, z));
+            model = glm::rotate(model, glm::radians(-30.0f), glm::vec3(0.0, 0.0, 1.0));
+            model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+            scene[stringID(x+1, y+1, z)] = Block('!', model);
+            torchPos.push_back({x+1, y+1, z});
+        }
+    }
+}
+
+void Generator::calculateLight(int x, int y, int z, int depth, int dir, int forbidden_mov)
+{   
+    float factor = 1 - depth*0.1;
+
+    if(dir == DALL)
+    {
+        scene[stringID(x, y, z)].backLights = glm::vec3(factor);
+        scene[stringID(x, y, z)].frontLights = glm::vec3(factor);
+    }
+    else if(scene.find(stringID(x, y, z)) != scene.end())
+    {
+        if(dir > 0 && scene[stringID(x, y, z)].frontLights[dir-1] < factor)
+        {
+            scene[stringID(x, y, z)].frontLights[dir-1] = factor;
+            return;
+        }
+        else if(dir < 0 && scene[stringID(x, y, z)].backLights[-dir-1] < factor)
+        {
+            scene[stringID(x, y, z)].backLights[-dir-1] = factor;
+            return;
+        }      
+    }
+    
+    if(depth > 5)    
+        return;
+
+    if(-dir != DLEFT) calculateLight(x-1, y, z, depth+1, DLEFT, 0);
+    if(-dir != DRIGHT) calculateLight(x+1, y, z, depth+1, DRIGHT, 0);
+    if(-dir != DBOT) calculateLight(x, y-1, z, depth+1, DBOT, 0);
+    if(-dir != DTOP) calculateLight(x, y+1, z, depth+1, DTOP, 0);
+    if(-dir != DBACK) calculateLight(x, y, z-1, depth+1, DBACK, 0);
+    if(-dir != DFRONT) calculateLight(x, y, z+1, depth+1, DFRONT, 0);
 }
 
 void Generator::setBlock(char id, int x, int y, int z, float rotation)
@@ -301,7 +441,7 @@ void Generator::setBlock(char id, int x, int y, int z, float rotation)
         model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0, 1.0, 0.0));
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
     
-    scene[stringID(x, y, z)] = {id, model};
+    scene[stringID(x, y, z)] = Block(id, model);
 }
 
 const char Generator::getBlock(int x, int y, int z) const

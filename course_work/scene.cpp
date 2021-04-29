@@ -11,18 +11,16 @@ Scene::Scene(const char * path)
     while(std::getline(in, s))
     {
         id = s[0];
-        std::cout << id;
         std::getline(in, s);
-        std::cout << ": " << s << std::endl;
         modelManagers[id] = new ModelManager(s.c_str());
     }
 
-    generator = new Generator(500, 500, 10);
+    generator = new Generator(100, 100, 10);
 
-    for(auto block : generator->getScene())
+    for(auto block : generator->getRawScene())
     {
         if(block.second.id != '0')
-            modelManagers[block.second.id]->addTransform(block.second.model);
+            modelManagers[block.second.id]->addAttribs(block.second);
     }
 
     for(auto manager : modelManagers)

@@ -15,12 +15,45 @@ struct Block
 {
     char id;
     glm::mat4 model;
+    glm::vec3 frontLights;
+    glm::vec3 backLights;
+
+    Block();
+    Block(char id, glm::mat4 model);
+    //Block(Block & other);
 };
 
 typedef std::map<std::string, Block> RawScene;
 
 class Generator
 {
+    struct Pos
+    {
+        int x,y,z;
+    };
+
+    enum FORBIDDEN_MOVEMENT
+    {
+        MNONE = 0,
+        MTOP    = 1 << 1,
+        MBOT    = 1 << 5,
+        MRIGHT  = 1 << 4,
+        MLEFT   = 1 << 2,
+        MFRONT  = 1 << 6,
+        MBACK   = 1 << 0
+    };
+
+    enum DIRECTION
+    {
+        DTOP    = -2,
+        DBOT    = 2,
+        DRIGHT  = 1,
+        DLEFT   = -1,
+        DFRONT  = 3,
+        DBACK   = -3,
+        DALL     = 0
+    };
+
     enum SIDES 
     {
         LEFT = 0,
@@ -43,7 +76,7 @@ public:
 
     const char getBlock(int i, int j, int k) const;
 
-    RawScene& getScene() { return scene; }
+    RawScene& getRawScene() { return scene; }
 
     static void getCoords(const std::string& key, int* x, int* y, int* z);
 
@@ -66,9 +99,13 @@ private:
 
     void setupWindows(Rect rect, int stage);
 
+    void setupTorchs(int x, int y, int z, bool horizontal);
+
     void setBlock(char id, int x, int y, int z, float rotation = 0);    //rotation is in degrees
 
     const std::string stringID(int i, int j, int k) const;
+
+    void calculateLight(int x, int y, int z, int depth, int dir, int movement);
 
 private:
 
@@ -78,6 +115,7 @@ private:
 
     RawScene scene;  //итоговая генерируемая сцена
     std::map<std::string, Rect> houses;
+    std::vector<Pos> torchPos;
 
 
     std::ofstream log;
